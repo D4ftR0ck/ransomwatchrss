@@ -4,7 +4,7 @@ IFS=
 valeur_a_verifier1=$(cat feedRSSdl | tail -n 1 )
 date=$(tail -n 4 monitoring.xml | head -n 1 | cut  -c 10-35 )
 grep -A 60 "$date" feedRSSdl | sed '1d' > feedRSSdl2
-sed -i 's/\*/\\*/g' feedRSSdl feedRSSdl2
+sed -i -e 's/\*/\\*/g' -e 's/&/\&amp;/g' -e 's/<em>//g' -e 's/<\/em>//g' -e 's/<strong>//g' -e 's/<\/a>//g' feedRSSdl feedRSSdl2
 
 if [ -f "monitoring.xml" ] && [ $valeur_a_verifier1 = $date ];then
         exit 1
@@ -26,7 +26,6 @@ if [ -f "monitoring.xml" ] && [ $valeur_a_verifier1 = $date ];then
         sed -i '1,3d' feedRSSdl2
         done
 
-        sed -i -e 's/&/\&amp;/g' -e 's/<em>//g' -e 's/<\/em>//g' -e 's/<strong>//g' -e 's/<\/a>//g' monitoring.xml
         echo "</channel>" >> monitoring.xml
         echo "</rss>" >> monitoring.xml
         rm feedRSSdl2 feedRSSdl
@@ -54,10 +53,8 @@ else
         sed -i '1,3d' feedRSSdl
         done
 
-        sed -i -e 's/&/\&amp;/g' -e 's/<em>//g' -e 's/<\/em>//g' -e 's/<strong>//g' -e 's/<\/a>//g' monitoring.xml
         echo "</channel>" >> monitoring.xml
         echo "</rss>" >> monitoring.xml
-
         rm feedRSSdl2 feedRSSdl
         timeout 600 python3 -m http.server 8555 --bind 127.0.0.1
 fi
