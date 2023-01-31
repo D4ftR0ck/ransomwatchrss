@@ -1,6 +1,7 @@
 Prerequisite:
 - The script must be put in a folder.
 - Use crontab.
+- Use jq
 
 The script will check for new ransomware and put it in an RSS feed.
 
