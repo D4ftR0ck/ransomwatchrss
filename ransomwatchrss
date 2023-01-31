@@ -1,60 +1,54 @@
 #!/bin/bash
-curl -sL ransomwhat.telemetry.ltd/posts | jq -r '.[] | .post_title, .group_name, .discovered' >  feedRSSdl
+current_dir=$(dirname $(realpath -s $0))
+curl -sL ransomwhat.telemetry.ltd/posts | jq -r '.[] | .post_title, .group_name, .discovered' >  $current_dir/feedRSSdl
 IFS=
-valeur_a_verifier1=$(cat feedRSSdl | tail -n 1 )
-date=$(tail -n 4 monitoring.xml | head -n 1 | cut  -c 10-35 )
-grep -A 60 "$date" feedRSSdl | sed '1d' > feedRSSdl2
-sed -i -e 's/\*/\\*/g' -e 's/&/\&amp;/g' -e 's/<em>//g' -e 's/<\/em>//g' -e 's/<strong>//g' -e 's/<\/a>//g' feedRSSdl feedRSSdl2
+valeur_a_verifier1=$(cat $current_dir/feedRSSdl | tail -n 1 )
+date=$(tail -n 4 $current_dir/monitoring.xml | head -n 1 | cut  -c 10-35 )
+grep -A 60 "$date" $current_dir/feedRSSdl | sed '1d' > $current_dir/feedRSSdl2
 
-if [ -f "monitoring.xml" ] && [ $valeur_a_verifier1 = $date ];then
-        exit 1
-        elif [ -f "monitoring.xml" ] && [ $valeur_a_verifier1 != $date ];then
-        sed -i '$d' monitoring.xml
-        sed -i '$d' monitoring.xml
-        file="feedRSSdl2"
-     
-        while [ "$(wc -l < "$file")" -gt 0 ];do
-        IFS=$'\n'
-        declare -a valeurs
-        valeurs=($(head -n 3 feedRSSdl2))
-        echo "<item>" >> monitoring.xml
-        echo "<title>${valeurs[0]}</title>" >> monitoring.xml
-        echo "<description>${valeurs[1]}</description>" >> monitoring.xml
-        echo "<link>http://ransomwhat.telemetry.ltd/posts</link>" >> monitoring.xml
-        echo "<pubDate>${valeurs[2]}</pubDate>" >> monitoring.xml
-        echo "</item>" >> monitoring.xml
-        sed -i '1,3d' feedRSSdl2
-        done
+sed -i -e 's/\*/\\*/g' -e 's/&/\&amp;/g' -e 's/<em>//g' -e 's/<\/em>//g' -e 's/<strong>//g' -e 's/<\/a>//g' $current_dir/feedRSSdl $current_dir/feedRSSdl2
 
-        echo "</channel>" >> monitoring.xml
-        echo "</rss>" >> monitoring.xml
-        rm feedRSSdl2 feedRSSdl
-        timeout 600 python3 -m http.server 8555 --bind 127.0.0.1
-        exit 1
-else
-    echo "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>" > monitoring.xml
-    echo "<rss version=\"2.0\">" >> monitoring.xml
-    echo "<channel>" >> monitoring.xml
-    echo "<title>RANSOMWHAT</title>" >> monitoring.xml
-    echo "<link>http://ransomwhat.telemetry.ltd/posts</link>" >> monitoring.xml
-    echo "<description>Les nouveaux ransomware</description>" >> monitoring.xml
-    file="feedRSSdl"
-    
-        while [ "$(wc -l < "$file")" -gt 0 ];do
-        IFS=$'\n'
-        declare -a valeurs
-        valeurs=($(head -n 3 feedRSSdl))
-        echo "<item>" >> monitoring.xml
-        echo "<title>${valeurs[0]}</title>" >> monitoring.xml
-        echo "<description>${valeurs[1]}</description>" >> monitoring.xml
-        echo "<link>http://ransomwhat.telemetry.ltd/posts</link>" >> monitoring.xml
-        echo "<pubDate>${valeurs[2]}</pubDate>" >> monitoring.xml
-        echo "</item>" >> monitoring.xml
-        sed -i '1,3d' feedRSSdl
-        done
-
-        echo "</channel>" >> monitoring.xml
-        echo "</rss>" >> monitoring.xml
-        rm feedRSSdl2 feedRSSdl
-        timeout 600 python3 -m http.server 8555 --bind 127.0.0.1
+if [ ! -f $current_dir/monitoring.xml ]; then
+touch "monitoring.xml"
 fi
+if grep -q "</rss>" $current_dir/monitoring.xml;then
+sed -i '$d' $current_dir/monitoring.xml
+sed -i '$d' $current_dir/monitoring.xml
+fi
+if [ $(wc -l < $current_dir/monitoring.xml) -lt 2 ]; then
+#creation du xml.
+echo "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>" > $current_dir/monitoring.xml
+echo "<rss version=\"2.0\">" >> $current_dir/monitoring.xml
+echo "<channel>" >> $current_dir/monitoring.xml
+echo "<title>RANSOMWHAT</title>" >> $current_dir/monitoring.xml
+echo "<link>http://ransomwhat.telemetry.ltd/posts</link>" >> $current_dir/monitoring.xml
+echo "<description>Les nouveaux ransomware</description>" >> $current_dir/monitoring.xml
+fi
+
+file=$current_dir/feedRSSdl2
+echo 1
+while [ "$(wc -l < "$file")" -gt 0 ];do
+echo 2
+IFS=$'\n'
+declare -a valeurs
+valeurs=($(head -n 3 $current_dir/feedRSSdl2))
+    if [ $valeur_a_verifier1 == $date ];then
+    echo "good"
+    sed -i '1,3d' $current_dir/feedRSSdl2
+    else # [ $valeur_a_verifier1 != $date ]
+    # création des feedsRSS
+    echo "<item>" >> $current_dir/monitoring.xml
+    echo "<title>${valeurs[0]}</title>" >> $current_dir/monitoring.xml
+    echo "<description>${valeurs[1]}</description>" >> $current_dir/monitoring.xml
+    echo "<link>http://ransomwhat.telemetry.ltd/posts</link>" >> $current_dir/monitoring.xml
+    echo "<pubDate>${valeurs[2]}</pubDate>" >> $current_dir/monitoring.xml
+    echo "</item>" >> $current_dir/monitoring.xml
+    sed -i '1,3d' $current_dir/feedRSSdl2
+    fi
+done
+rm $current_dir/feedRSSdl2 $current_dir/feedRSSdl
+if ! grep -q "</rss>" $current_dir/monitoring.xml;then
+echo "</channel>" >> $current_dir/monitoring.xml
+echo "</rss>" >> $current_dir/monitoring.xml
+fi
+timeout 600 python3 -m http.server 8555 --bind 127.0.0.1 -d $current_dir/
