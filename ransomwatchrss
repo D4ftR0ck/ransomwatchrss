@@ -4,7 +4,7 @@ curl -sL ransomwhat.telemetry.ltd/posts | jq -r '.[] | .post_title, .group_name,
 IFS=
 valeur_a_verifier1=$(cat $current_dir/feedRSSdl | tail -n 1 )
 date=$(tail -n 4 $current_dir/monitoring.xml | head -n 1 | cut  -c 10-35 )
-grep -A 60 "$date" $current_dir/feedRSSdl | sed '1d' > $current_dir/feedRSSdl2
+grep -A 60 "$date" $current_dir/feedRSSdl > $current_dir/feedRSSdl2
 
 sed -i -e 's/\*/\\*/g' -e 's/&/\&amp;/g' -e 's/<em>//g' -e 's/<\/em>//g' -e 's/<strong>//g' -e 's/<\/a>//g' $current_dir/feedRSSdl $current_dir/feedRSSdl2
 
