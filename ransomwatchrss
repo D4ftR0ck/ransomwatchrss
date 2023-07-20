@@ -1,16 +1,19 @@
 #!/bin/bash
 current_dir=$(dirname $(realpath -s $0))
 curl -sL ransomwhat.telemetry.ltd/posts | jq -r '.[] | .post_title, .group_name, .discovered' > $current_dir/feedRSSlistlast
+
 valeur_a_verifier=$(cat $current_dir/feedRSSlistlast | tail -n 1)
 date=$(tail -n 4 $current_dir/monitoring.xml | head -n 1 | cut  -c 10-35 )
+# ajouter une vérification date doit etre une date... sinon bug a venir
 IFS=
 
 # vérifie que le fichier a des dates différentes pour se lancer
-if [ "$valeur_a_verifier" = "$date" ]; then
+if [ "$valeur_a_verifier" == "$date" ]; then
 exit
 fi
 
 cp $current_dir/feedRSSlistlast $current_dir/feedRSSlist
+
 #permet de retirer les étoiles de la veille de certain ransomware qui bug avec le echo de la création de tableau.
 sed -i -e 's/\*/\\*/g' -e 's/&/\&amp;/g' -e 's/<em>//g' -e 's/<\/em>//g' -e 's/<strong>//g' -e 's/<\/a>//g' -e '/^$/s//NEANT/' $current_dir/feedRSSlistlast $current_dir/feedRSSlist
 
@@ -41,30 +44,39 @@ while [ "$(wc -l < "$file")" -gt 0 ];do
 IFS=$'\n'
 declare -a valeurs
 valeurs=($(tail -n 3 $current_dir/feedRSSlist))
-# il créé la dernière valeur avant de sortir de la boucle avec le break
-    if [ "$valeur_a_verifier" == "${valeurs[2]}" ];then
-    echo "<item>" >> $current_dir/monitoring.xml
-    echo "<title>${valeurs[0]}</title>" >> $current_dir/monitoring.xml
-    echo "<description>Groupe: ${valeurs[1]} Victime : ${valeurs[0]}</description>" >> $current_dir/monitoring.xml
-    echo "<link>http://ransomwhat.telemetry.ltd/posts</link>" >> $current_dir/monitoring.xml
-    echo "<pubDate>${valeurs[2]}</pubDate>" >> $current_dir/monitoring.xml
-    echo "</item>" >> $current_dir/monitoring.xml
-    sed -i '1,3d' $current_dir/feedRSSlist
-    break
+   if [ "$date" != "${valeurs[2]}" ];then
+   echo ${valeurs[0]} >> $current_dir/transit
+   echo ${valeurs[1]} >> $current_dir/transit
+   echo ${valeurs[2]} >> $current_dir/transit
+   sed -i '$d' $current_dir/feedRSSlist
+   sed -i '$d' $current_dir/feedRSSlist
+   sed -i '$d' $current_dir/feedRSSlist
 
-    else # [ $valeur_a_verifier != $date ]
-    # création des feedsRSS
-    echo "<item>" >> $current_dir/monitoring.xml
-    echo "<title>${valeurs[0]}</title>" >> $current_dir/monitoring.xml
-    echo "<description>Groupe: ${valeurs[1]} Victime : ${valeurs[0]}</description>" >> $current_dir/monitoring.xml
-    echo "<link>http://ransomwhat.telemetry.ltd/posts</link>" >> $current_dir/monitoring.xml
-    echo "<pubDate>${valeurs[2]}</pubDate>" >> $current_dir/monitoring.xml
-    echo "</item>" >> $current_dir/monitoring.xml
-    sed -i '1,3d' $current_dir/feedRSSlist
-    fi
+   else
+   break
+   fi
 done
 
 rm $current_dir/feedRSSlist
+
+file2=$current_dir/transit
+
+while [ "$(wc -l < "$file2")" -gt 0 ];do
+IFS=$'\n'
+declare -a valeurs
+valeurs=($(tail -n 3 $current_dir/transit))
+echo "<item>" >> $current_dir/monitoring.xml
+echo "<title>${valeurs[0]}</title>" >> $current_dir/monitoring.xml
+echo "<description>Groupe: ${valeurs[1]} Victime : ${valeurs[0]}</description>" >> $current_dir/monitoring.xml
+echo "<link>http://ransomwhat.telemetry.ltd/posts</link>" >> $current_dir/monitoring.xml
+echo "<pubDate>${valeurs[2]}</pubDate>" >> $current_dir/monitoring.xml
+echo "</item>" >> $current_dir/monitoring.xml
+sed -i '$d' $current_dir/transit
+sed -i '$d' $current_dir/transit
+sed -i '$d' $current_dir/transit
+done
+
+rm $current_dir/transit
 
 # ferme le fichier monitoring
 if ! grep -q "</rss>" $current_dir/monitoring.xml;then
