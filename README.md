@@ -1,6 +1,6 @@
 The script takes the data from https://ransomwatch.telemetry.ltd/#/ and integrates it into RSS feeds that you can feed into any RSS aggregator.
 
-Prerequisite:
+Require:
 - The script must be put in a folder.
 - Use crontab (if you want).
 - Use jq (bash)
