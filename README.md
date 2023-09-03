@@ -12,7 +12,7 @@ The script will check for new ransomware and put it in an RSS feed.
 You just have to add this link: http://127.0.0.1:8555/monitoring.xml in an RSS feed aggregator
 If you're using a local apache or nginx server, simply hide lines 90 and 91.
 
-The date format you provided, "YYYY-MM-DD HH:mm:ss.mmss", ISO 8601 format.
+The date format you provided, "yyyy/MM/dd-HH:mm:ss.SSS. For example, 2013/02/27-13:57:21.123" (ISO8601)
 
 The server is up for 600 seconds. You can modify it according to your needs.
 
