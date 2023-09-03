@@ -9,6 +9,7 @@ IFS=
 
 # vérifie que le fichier a des dates différentes pour se lancer
 if [ "$valeur_a_verifier" == "$date" ]; then
+echo "$valeur_a_verifier est égale à $date, pas d'ouverture."
 exit
 fi
 
@@ -65,9 +66,12 @@ while [ "$(wc -l < "$file2")" -gt 0 ];do
 IFS=$'\n'
 declare -a valeurs
 valeurs=($(tail -n 3 $current_dir/transit))
+echo "Traitement de ${valeurs[0]} - ${valeurs[1]} - ${valeurs[2]}"
 echo "<item>" >> $current_dir/monitoring.xml
 echo "<title>${valeurs[0]}</title>" >> $current_dir/monitoring.xml
-echo "<description>Groupe: ${valeurs[1]} Victime : ${valeurs[0]}</description>" >> $current_dir/monitoring.xml
+echo "<description>Groupe: ${valeurs[1]} <![CDATA[<br >]]>" >> $current_dir/monitoring.xml
+# echo "<br />" >> $current_dir/monitoring.xml
+echo "Victime: ${valeurs[0]}</description>" >> $current_dir/monitoring.xml
 echo "<link>http://ransomwhat.telemetry.ltd/posts</link>" >> $current_dir/monitoring.xml
 echo "<pubDate>${valeurs[2]}</pubDate>" >> $current_dir/monitoring.xml
 echo "</item>" >> $current_dir/monitoring.xml
