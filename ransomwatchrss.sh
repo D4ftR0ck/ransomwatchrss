@@ -7,6 +7,11 @@ date=$(tail -n 4 $current_dir/monitoring.xml | head -n 1 | cut  -c 10-35 )
 # ajouter une vérification date doit etre une date... sinon bug a venir
 IFS=
 
+# creation monitoring
+if [ ! -f $current_dir/monitoring.xml ]; then
+touch "$current_dir/monitoring.xml"
+fi
+
 # vérifie que le fichier a des dates différentes pour se lancer
 if [ "$valeur_a_verifier" == "$date" ]; then
 echo "$valeur_a_verifier est égale à $date, pas d'ouverture."
@@ -17,11 +22,6 @@ cp $current_dir/feedRSSlistlast $current_dir/feedRSSlist
 
 #permet de retirer les étoiles de la veille de certain ransomware qui bug avec le echo de la création de tableau.
 sed -i -e 's/\*/\\*/g' -e 's/&/\&amp;/g' -e 's/<em>//g' -e 's/<\/em>//g' -e 's/<strong>//g' -e 's/<\/a>//g' -e '/^$/s//NEANT/' $current_dir/feedRSSlistlast $current_dir/feedRSSlist
-
-# creation monitoring
-if [ ! -f $current_dir/monitoring.xml ]; then
-touch "$current_dir/monitoring.xml"
-fi
 
 # Open or not - monitoring
 if grep -q "</rss>" $current_dir/monitoring.xml;then
@@ -49,10 +49,7 @@ valeurs=($(tail -n 3 $current_dir/feedRSSlist))
    echo ${valeurs[0]} >> $current_dir/transit
    echo ${valeurs[1]} >> $current_dir/transit
    echo ${valeurs[2]} >> $current_dir/transit
-   sed -i '$d' $current_dir/feedRSSlist
-   sed -i '$d' $current_dir/feedRSSlist
-   sed -i '$d' $current_dir/feedRSSlist
-
+   for i in {1..3}; do sed -i '$d' $current_dir/feedRSSlist; done
    else
    break
    fi
@@ -69,15 +66,11 @@ valeurs=($(tail -n 3 $current_dir/transit))
 echo "Traitement de ${valeurs[0]} - ${valeurs[1]} - ${valeurs[2]}"
 echo "<item>" >> $current_dir/monitoring.xml
 echo "<title>${valeurs[0]}</title>" >> $current_dir/monitoring.xml
-echo "<description>Groupe: ${valeurs[1]} <![CDATA[<br >]]>" >> $current_dir/monitoring.xml
-# echo "<br />" >> $current_dir/monitoring.xml
-echo "Victime: ${valeurs[0]}</description>" >> $current_dir/monitoring.xml
+echo "<description><![CDATA[Groupe: ${valeurs[1]} <br >Victime: ${valeurs[0]} <br >Date: ${valeurs[2]} ]]></description>" >> $current_dir/monitoring.xml
 echo "<link>http://ransomwhat.telemetry.ltd/posts</link>" >> $current_dir/monitoring.xml
 echo "<pubDate>${valeurs[2]}</pubDate>" >> $current_dir/monitoring.xml
 echo "</item>" >> $current_dir/monitoring.xml
-sed -i '$d' $current_dir/transit
-sed -i '$d' $current_dir/transit
-sed -i '$d' $current_dir/transit
+for i in {1..3}; do sed -i '$d' $current_dir/transit; done
 done
 
 rm $current_dir/transit
